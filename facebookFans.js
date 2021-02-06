@@ -1,9 +1,9 @@
 const puppeteer = require('puppeteer');
 const { auth } = require('./config');
-const { group } = require('./config');
+const { fan } = require('./config');
 
 (async () => {
-  const baseURL = 'https://www.facebook.com/groups/'
+  const baseURL = 'https://www.facebook.com/'
   // const browser = await puppeteer.launch({ ignoreDefaultArgs: ["--enable-automation"] });
   const browser = await puppeteer.launch({
     headless: false,
@@ -17,13 +17,13 @@ const { group } = require('./config');
       && interceptedResponse.ok()) {
       const request = interceptedResponse.request()
       const postData = request.postData()
-      if (postData.indexOf('fb_api_req_friendly_name=CometUFIReactionsDialogTabContentRefetchQuery')) {
+      if (postData.indexOf('fb_api_req_friendly_name=CometPageCommunityTopFansDialogQuery')) {
         try {
           const respJSON = await interceptedResponse.json()
-          if (respJSON.data && respJSON.data.node && respJSON.data.node.reactors && respJSON.data.node.reactors.edges) {
-            const userList = respJSON.data.node.reactors.edges
+          if (respJSON.data && respJSON.data.node && respJSON.data.node.top_fans && respJSON.data.node.top_fans.edges) {
+            const userList = respJSON.data.node.top_fans.edges
             userList.forEach((user) => {
-              const { id, name, url } = user.node
+              const { id, name, url } = user.node.fan
               console.log(id, name, url)
             })
           }
@@ -38,9 +38,7 @@ const { group } = require('./config');
    * 登入
    */
   let login = async () => {
-    await page.goto(auth.loginURL, {
-      // waitUntil: 'networkidle2'
-    });
+    await page.goto(auth.loginURL);
     const accountField = '#email'
     const passwordField = '#pass'
     await page.waitForSelector(accountField);
@@ -51,13 +49,15 @@ const { group } = require('./config');
     await page.waitForNavigation();
   }
 
+
   /**
    * 抓資料
    */
   let grab = async () => {
-    await page.goto(`${baseURL}${group.groupId}`);
-    await page.waitForSelector('span[role="toolbar"]');
-    await page.click('span[role="toolbar"]');
+    await page.goto(`${baseURL}${fan.account}/community/?ref=page_internal`);
+
+    await page.waitForSelector('div[role = button] > span[dir = auto]');
+    await page.click('div[role = button] > span[dir = auto]');
   }
 
   await login()
