@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer');
 const { auth } = require('./config');
 const { fan } = require('./config');
 const fs = require('fs');
-
+const stringify = require('csv-stringify');
 
 (async () => {
   const baseURL = 'https://www.facebook.com/'
@@ -32,14 +32,27 @@ const fs = require('fs');
           const respJSON = await interceptedResponse.json()
           if (respJSON.data && respJSON.data.node && respJSON.data.node.top_fans && respJSON.data.node.top_fans.edges) {
             const userList = respJSON.data.node.top_fans.edges
+            const memberDataList = []
             userList.forEach((user) => {
               const { id, name, url } = user.node.fan
+              memberDataList.push({id, name, url})
               console.log(id, name, url)
             })
-          }
-          // 判斷是否有下一筆
-          if (respJSON.data.node.top_fans.page_info.has_next_page === true) {
-            hasNext = true
+            stringify(memberDataList, (err,output) => {
+              if (err) {
+                console.log(err)
+              } else{
+                fs.appendFile('./memberData.csv', output, (err,result)=>{
+                  if (err) {
+                    console.log(err);
+                  }
+                });
+              }
+            })
+            // 判斷是否有下一筆
+            if (respJSON.data.node.top_fans.page_info.has_next_page === true) {
+              hasNext = true
+            }
           }
         } catch (error) {
           hasNext = false
