@@ -1,5 +1,4 @@
 const puppeteer = require('puppeteer');
-const { auth } = require('./config');
 const { fan } = require('./config');
 const fs = require('fs');
 const stringify = require('csv-stringify');
@@ -13,12 +12,7 @@ const stringify = require('csv-stringify');
     // args: ['--no-sandbox', '--disable-setuid-sandbox']
   });
   const page = await browser.newPage();
-  // TODO 判斷有沒有 cookies 檔案或者檔案是否為空，如果有資料就載入，同時不跳登入畫面
-  // Load cookie
-  const cookiesString = await fs.readFileSync('./cookies.json', 'utf8');
-  const cookies = JSON.parse(cookiesString);
-  await page.setCookie(...cookies);
-
+  
   // 是否有下一筆
   let hasNext = true
 
@@ -65,24 +59,15 @@ const stringify = require('csv-stringify');
    * 登入
    */
   let login = async () => {
-    await page.goto(auth.loginURL);
-    const accountField = '#email'
-    const passwordField = '#pass'
-    await page.waitForSelector(accountField);
-    await page.type(accountField, auth.user);
-    await page.waitForSelector(passwordField);
-    await page.type(passwordField, auth.pass);
-    await page.click('button[name=login]');
+    await page.goto('https://www.facebook.com/');
     await page.waitForNavigation();
 
     // Save cookie
-    // const cookies = await page.cookies();
-    // await fs.writeFile('cookies.json', JSON.stringify(cookies, null, 2), function (err) {
-    //   if (err)
-    //     console.log(err);
-    //   else
-    //     console.log('Write operation complete.');
-    // });
+    const cookies = await page.cookies();
+    await fs.writeFile('cookies.json', JSON.stringify(cookies, null, 2), function (err) {
+      if (err)
+        console.log(err);
+    });
   }
 
   /**
@@ -106,9 +91,17 @@ const stringify = require('csv-stringify');
     }
   }
 
-  // await login()
+  // 有沒有 cookies 檔案或者檔案是否為空，如果有資料就載入，同時不跳登入畫面
+  if (fs.existsSync('./cookies.json')) {
+    // Load cookie
+    const cookiesString = await fs.readFileSync('./cookies.json', 'utf8');
+    const cookies = JSON.parse(cookiesString);
+    await page.setCookie(...cookies);
+  } else {
+    await login()
+  }
+  
   page.on('response', detected);
   await grab()
-
   await browser.close();
 })();
