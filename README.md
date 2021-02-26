@@ -1,9 +1,17 @@
-https://github.com/puppeteer/puppeteer
+## 初始化
 
-https://pptr.dev
+`npm install`
 
-https://codeburst.io/a-guide-to-automating-scraping-the-web-with-javascript-chrome-puppeteer-node-js-b18efb9e9921
+## 抓取頭號粉絲
 
-https://blog.typeart.cc/using-puppeteer-crawler-common-skills/
+`node facebookFans.js`
 
-https://www.facebook.com/profile.php?id=????
+## 抓取互動的會員
+
+`node facebookReactor.js`
+
+## 資料儲存位置
+
+memberData.csv
+
+寫入時會從舊資料繼續寫入，不會覆蓋舊資料
